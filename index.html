@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LabFlow | Laboratuvar Rezervasyon</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --panel: #ffffff;
+      --text: #12213a;
+      --muted: #6c7890;
+      --border: #d7deea;
+      --primary: #2f61ff;
+      --primary-soft: #eaf0ff;
+      --success-bg: #eefaf0;
+      --success-text: #2f6a36;
+      --danger-bg: #fff1f1;
+      --danger-text: #983838;
+      --warn-bg: #fff8e7;
+      --warn-text: #7f6311;
+      --shadow: 0 14px 36px rgba(13, 35, 87, 0.08);
+      --radius: 22px;
+
+      --available: #bde8c1;
+      --available-border: #5d9264;
+      --occupied: #f2b2b2;
+      --occupied-border: #b95454;
+      --blocked: #ffe3a3;
+      --blocked-border: #b98717;
+      --maintenance: #d9dee7;
+      --maintenance-border: #8a95a8;
+      --selected: #c8d9ff;
+      --selected-border: #2f61ff;
+      --table: #efefef;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #eef3fb 0%, #f8fbff 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px;
+      display: grid;
+      gap: 22px;
+    }
+
+    .hero,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 24px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 32px;
+      letter-spacing: -0.03em;
+    }
+
+    .hero p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .top-actions {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 16px;
+    }
+
+    .filter-card,
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .filter-card label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .filter-card input,
+    .student-fields input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 16px;
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .stat strong {
+      font-size: 24px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(420px, 1fr) 360px;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .scanner-panel {
+      padding: 22px;
+    }
+
+    .scanner-header {
+      margin-bottom: 16px;
+    }
+
+    .scanner-header h2 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+    }
+
+    .scanner-header p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .side-panel {
+      padding: 22px;
+      display: grid;
+      gap: 16px;
+      position: sticky;
+      top: 28px;
+    }
+
+    .info-card {
+      background: #f8faff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .info-card h3 {
+      margin: 0 0 12px;
+      font-size: 16px;
+    }
+
+    .muted,
+    .note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 10px 0;
+      font-size: 14px;
+    }
+
+    .meta-row strong {
+      font-size: 14px;
+    }
+
+    .status-box {
+      padding: 14px 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    .status-pending {
+      background: var(--warn-bg);
+      color: var(--warn-text);
+    }
+
+    .status-success {
+      background: var(--success-bg);
+      color: var(--success-text);
+    }
+
+    .status-error {
+      background: var(--danger-bg);
+      color: var(--danger-text);
+    }
+
+    .btn,
+    .slot-btn {
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.2s ease;
+      font-family: inherit;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn {
+      color: #fff;
+      background: linear-gradient(135deg, #2f61ff, #4e86ff);
+      box-shadow: 0 14px 28px rgba(47, 97, 255, 0.22);
+      min-width: 160px;
+    }
+
+    .btn.secondary {
+      background: #1d2a44;
+      box-shadow: none;
+    }
+
+    .btn:disabled {
+      background: #b8c2d6;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .button-group {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .student-fields {
+      display: grid;
+      gap: 12px;
+    }
+
+    .selected-desk {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    .slot-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .slot-btn {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      text-align: left;
+      justify-content: flex-start;
+      box-shadow: none;
+      font-weight: 600;
+    }
+
+    .slot-btn:hover:not(:disabled) {
+      border-color: #b8c7f8;
+      background: #f8faff;
+    }
+
+    .slot-btn.selected {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .slot-btn:disabled {
+      background: #f3f4f7;
+      color: #98a1b1;
+      cursor: not-allowed;
+    }
+
+    .lab-wrap {
+      margin-top: 14px;
+    }
+
+    .lab-board {
+  position: relative;
+  min-height: 980px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(to right, rgba(0,0,0,0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.035) 1px, transparent 1px),
+    #f8f9fb;
+  background-size: 20px 20px;
+  overflow: visible; /* hidden yerine visible */
+  padding: 28px;
+}
+
+    .lab-label {
+      position: absolute;
+      top: 18px;
+      left: 22px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-weight: 800;
+      box-shadow: 0 8px 18px rgba(15, 30, 70, 0.08);
+      z-index: 3;
+    }
+
+    .schedule-banner {
+      margin-top: 18px;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .schedule-banner.available {
+      background: var(--success-bg);
+      border: 1px solid #bfe0c2;
+      color: var(--success-text);
+    }
+
+    .schedule-banner.blocked {
+      background: var(--warn-bg);
+      border: 1px solid #f0d798;
+      color: var(--warn-text);
+    }
+
+    .desk-grid-204,
+    .desk-grid-208 {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      margin-top: 24px;
+    }
+
+    .desk-grid-204 {
+      min-height: 860px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 34px 50px;
+      padding-top: 20px;
+    }
+
+    .desk-grid-208 {
+      min-height: 860px;
+      padding-top: 20px;
+    }
+
+    .desk-row {
+      display: flex;
+      justify-content: center;
+    }
+
+    .desk-grid-208 .top-row {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    .desk-grid-208 .left-column {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      width: 160px;
+      margin-left: 12px;
+    }
+
+    .desk {
+      position: relative;
+      background: var(--table);
+      border: 2px solid #2a3140;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      padding: 18px 20px;
+      border-radius: 8px;
+    }
+
+    .desk:hover:not(.disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px rgba(20, 32, 65, 0.12);
+    }
+
+    .desk.horizontal {
+      width: 310px;
+      height: 94px;
+    }
+
+    .desk.vertical {
+      width: 84px;
+      height: 148px;
+      flex-direction: column;
+      gap: 18px;
+      padding: 12px 10px;
+    }
+
+    .desk.disabled {
+      cursor: not-allowed;
+      opacity: 0.95;
+    }
+
+    .pc {
+      width: 104px;
+      height: 50px;
+      border-radius: 10px;
+      border: 1.5px solid #334055;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .desk.vertical .pc {
+      width: 58px;
+      height: 72px;
+    }
+
+    .desk.available .pc {
+      background: var(--available);
+      border-color: var(--available-border);
+    }
+
+    .desk.occupied .pc {
+      background: var(--occupied);
+      border-color: var(--occupied-border);
+    }
+
+    .desk.blocked .pc {
+      background: var(--blocked);
+      border-color: var(--blocked-border);
+    }
+
+    .desk.maintenance .pc {
+      background: var(--maintenance);
+      border-color: var(--maintenance-border);
+    }
+
+    .desk.selected .pc {
+      background: var(--selected);
+      border-color: var(--selected-border);
+    }
+
+    .desk-tag {
+      position: absolute;
+      top: -12px;
+      left: 12px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: 0 6px 16px rgba(16, 35, 80, 0.08);
+    }
+
+    .desk-state {
+      position: absolute;
+      bottom: -12px;
+      right: 12px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      box-shadow: 0 6px 16px rgba(16, 35, 80, 0.08);
+    }
+
+.legend-box {
+  position: absolute;
+  right: 24px;
+  bottom: -20px; /* daha aşağı iner */
+  width: 240px;
+  background: rgba(255,255,255,0.94);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+  z-index: 3;
+}
+    .legend-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #111c2f;
+      margin-bottom: 14px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: #4f5c72;
+      margin-bottom: 12px;
+    }
+
+    .legend-item:last-child { margin-bottom: 0; }
+
+    .legend-chip {
+      width: 28px;
+      height: 18px;
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.15);
+      display: inline-block;
+    }
+
+    .legend-chip.available { background: var(--available); }
+    .legend-chip.occupied { background: var(--occupied); }
+    .legend-chip.blocked { background: var(--blocked); }
+    .legend-chip.maintenance { background: var(--maintenance); }
+    .legend-chip.selected { background: var(--selected); }
+
+    @media (max-width: 1180px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .side-panel {
+        position: static;
+      }
+
+      .page {
+        padding: 16px;
+      }
+
+      .filters {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .legend-box {
+        position: static;
+        width: 100%;
+        margin-top: 24px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .desk-grid-204 {
+        grid-template-columns: 1fr;
+      }
+
+      .desk-grid-208 .top-row {
+        justify-content: flex-start;
+      }
+
+      .hero h1 {
+        font-size: 26px;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <h1>Laboratuvar Rezervasyon</h1>
+      <p>
+        Lab seçin, uygun masayı belirleyin, saat aralığını seçin ve rezervasyon oluşturun.
+        Rezervasyon başlangıcından sonra giriş doğrulaması için scanner ekranından QR okutun.
+      </p>
+
+      <div class="top-actions">
+        <button id="btn204" class="btn" type="button">Lab 204</button>
+        <button id="btn208" class="btn secondary" type="button">Lab 208</button>
+        <a href="scanner.html" class="btn secondary">QR ile Giriş</a>
+      </div>
+    </section>
+
+    <section class="filters">
+      <div class="filter-card">
+        <label for="reservationDate">Tarih Seç</label>
+        <input type="date" id="reservationDate" />
+      </div>
+
+      <section class="stats">
+        <div class="stat">
+          <span>Toplam masa</span>
+          <strong id="totalCount">0</strong>
+        </div>
+        <div class="stat">
+          <span>Müsait masa</span>
+          <strong id="availableCount">0</strong>
+        </div>
+        <div class="stat">
+          <span>Rezerve masa</span>
+          <strong id="occupiedCount">0</strong>
+        </div>
+        <div class="stat">
+          <span>Arızalı masa</span>
+          <strong id="maintenanceCount">0</strong>
+        </div>
+      </section>
+    </section>
+
+    <section class="layout">
+      <div class="panel scanner-panel">
+        <div class="scanner-header">
+          <h2 id="pageTitle">Lab 204 Yerleşim ve Rezervasyon</h2>
+          <p>Müsait masaya tıklayın, uygun saatleri görün ve rezervasyonunuzu oluşturun.</p>
+        </div>
+
+        <div class="lab-wrap">
+          <div class="lab-board">
+            <div class="lab-label" id="labLabel">Lab 204</div>
+            <div id="scheduleBanner"></div>
+            <div id="deskArea"></div>
+
+            <div class="legend-box">
+              <div class="legend-title">Lejant</div>
+              <div class="legend-item"><span class="legend-chip available"></span> Müsait</div>
+              <div class="legend-item"><span class="legend-chip occupied"></span> Dolu</div>
+              <div class="legend-item"><span class="legend-chip blocked"></span> Ders nedeniyle kapalı</div>
+              <div class="legend-item"><span class="legend-chip maintenance"></span> Arızalı / bakımda</div>
+              <div class="legend-item"><span class="legend-chip selected"></span> Seçili</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel side-panel">
+        <div class="info-card">
+          <h3>Öğrenci Bilgisi</h3>
+          <div class="student-fields">
+            <input id="studentName" type="text" placeholder="Ad Soyad" />
+            <input id="studentNumber" type="text" placeholder="Öğrenci Numarası" />
+          </div>
+        </div>
+
+        <div class="info-card">
+          <h3>Seçilen Masa</h3>
+          <p class="muted" id="deskHint">Önce tarih seçin, sonra yerleşim planından müsait bir masaya tıklayın.</p>
+          <div id="selectedDeskBadge"></div>
+        </div>
+
+        <div class="info-card">
+          <h3>Masa Durumu</h3>
+          <div id="deskStatusBox" class="status-box status-pending">
+            Bir masa seçildiğinde durumu burada gösterilir.
+          </div>
+        </div>
+
+        <div class="info-card">
+          <h3>Müsait Saatler</h3>
+          <p class="note">
+            Masa seçildikten sonra sadece uygun rezervasyon aralıkları listelenir.
+            Maksimum süre 2 saattir.
+          </p>
+          <div id="slotList" class="slot-list">
+            <button class="slot-btn" disabled>Masa seçilmedi</button>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <h3>Rezervasyon Özeti</h3>
+          <div class="meta-row"><span>Lab</span><strong id="summaryLab">204</strong></div>
+          <div class="meta-row"><span>Masa</span><strong id="summaryDesk">-</strong></div>
+          <div class="meta-row"><span>Tarih</span><strong id="summaryDate">-</strong></div>
+          <div class="meta-row"><span>Saat</span><strong id="summaryTime">-</strong></div>
+
+          <div class="button-group">
+            <button id="reserveBtn" class="btn" disabled>Rezervasyon Oluştur</button>
+            <a href="scanner.html" class="btn secondary">QR ile Girişe Git</a>
+          </div>
+
+          <div class="note" style="margin-top:12px;">
+            Seçtiğiniz saat başladığında 15 dakika içinde ilgili lab girişindeki QR kod okutulmalıdır.
+            Aksi halde rezervasyon otomatik iptal edilir.
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "labflowReservation";
+
+    const labData = {
+      "204": {
+        name: "Lab 204",
+        layout: "grid204",
+        desks: [
+          { id: "M1", pcs: ["PC1", "PC2"], status: "available", slots: ["09:00 - 10:00", "10:00 - 12:00", "14:00 - 16:00"] },
+          { id: "M2", pcs: ["PC3", "PC4"], status: "occupied", slots: [] },
+          { id: "M3", pcs: ["PC5", "PC6"], status: "available", slots: ["08:00 - 10:00", "11:00 - 13:00", "15:00 - 17:00"] },
+          { id: "M4", pcs: ["PC7", "PC8"], status: "available", slots: ["09:00 - 11:00", "13:00 - 15:00"] },
+          { id: "M5", pcs: ["PC9", "PC10"], status: "maintenance", slots: [] },
+          { id: "M6", pcs: ["PC11", "PC12"], status: "blocked", slots: [] },
+          { id: "M7", pcs: ["PC13", "PC14"], status: "available", slots: ["10:00 - 12:00", "13:00 - 14:00", "16:00 - 18:00"] },
+          { id: "M8", pcs: ["PC15", "PC16"], status: "occupied", slots: [] },
+          { id: "M9", pcs: ["PC17", "PC18"], status: "available", slots: ["09:00 - 10:00", "12:00 - 14:00", "15:00 - 16:00"] },
+          { id: "M10", pcs: ["PC19", "PC20"], status: "available", slots: ["08:00 - 09:00", "10:00 - 11:00", "14:00 - 16:00"] }
+        ]
+      },
+      "208": {
+        name: "Lab 208",
+        layout: "layout208",
+        desks: [
+          { id: "M1", pcs: ["PC1", "PC2"], status: "available", slots: ["09:00 - 10:00", "10:00 - 12:00", "14:00 - 16:00"] },
+          { id: "M2", pcs: ["PC3", "PC4"], status: "available", slots: ["09:00 - 11:00", "13:00 - 15:00"] },
+          { id: "M3", pcs: ["PC5", "PC6"], status: "occupied", slots: [] },
+          { id: "M4", pcs: ["PC7", "PC8"], status: "maintenance", slots: [] },
+          { id: "M5", pcs: ["PC9", "PC10"], status: "blocked", slots: [] }
+        ]
+      }
+    };
+
+    const embeddedSchedules = {
+      "204": {
+        monday: [{ start: "09:00", end: "11:00", course: "Veri Yapıları" }],
+        tuesday: [{ start: "13:00", end: "15:00", course: "Web Programlama" }],
+        wednesday: [],
+        thursday: [{ start: "10:00", end: "12:00", course: "Yapay Zeka" }],
+        friday: []
+      },
+      "208": {
+        monday: [],
+        tuesday: [{ start: "09:00", end: "11:00", course: "Ofis Yazılımları" }],
+        wednesday: [{ start: "14:00", end: "16:00", course: "Bilgisayar Grafikleri" }],
+        thursday: [],
+        friday: [{ start: "10:00", end: "12:00", course: "Ağ Temelleri" }]
+      }
+    };
+
+    let currentLab = "204";
+    let selectedDeskId = null;
+    let selectedSlot = null;
+
+    const pageTitle = document.getElementById("pageTitle");
+    const labLabel = document.getElementById("labLabel");
+    const deskArea = document.getElementById("deskArea");
+    const scheduleBanner = document.getElementById("scheduleBanner");
+
+    const totalCount = document.getElementById("totalCount");
+    const availableCount = document.getElementById("availableCount");
+    const occupiedCount = document.getElementById("occupiedCount");
+    const maintenanceCount = document.getElementById("maintenanceCount");
+
+    const deskHint = document.getElementById("deskHint");
+    const selectedDeskBadge = document.getElementById("selectedDeskBadge");
+    const deskStatusBox = document.getElementById("deskStatusBox");
+    const slotList = document.getElementById("slotList");
+
+    const summaryLab = document.getElementById("summaryLab");
+    const summaryDesk = document.getElementById("summaryDesk");
+    const summaryDate = document.getElementById("summaryDate");
+    const summaryTime = document.getElementById("summaryTime");
+    const reserveBtn = document.getElementById("reserveBtn");
+
+    const btn204 = document.getElementById("btn204");
+    const btn208 = document.getElementById("btn208");
+    const reservationDate = document.getElementById("reservationDate");
+    const studentName = document.getElementById("studentName");
+    const studentNumber = document.getElementById("studentNumber");
+
+    const statusText = {
+      available: "Müsait",
+      occupied: "Dolu",
+      blocked: "Ders nedeniyle kapalı",
+      maintenance: "Arızalı / bakımda"
+    };
+
+    function setToday() {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, "0");
+      const dd = String(today.getDate()).padStart(2, "0");
+      reservationDate.value = `${yyyy}-${mm}-${dd}`;
+      summaryDate.textContent = `${dd}.${mm}.${yyyy}`;
+    }
+
+    function getSelectedDate() {
+      return reservationDate.value ? new Date(reservationDate.value + "T00:00:00") : null;
+    }
+
+    function formatDateTR(date) {
+      const dd = String(date.getDate()).padStart(2, "0");
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const yyyy = date.getFullYear();
+      return `${dd}.${mm}.${yyyy}`;
+    }
+
+    function getDayKey(date) {
+      const keys = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+      return keys[date.getDay()];
+    }
+
+    function getLessonInfoForDate(labCode, date) {
+      const dayKey = getDayKey(date);
+      if (!embeddedSchedules[labCode][dayKey]) return [];
+      return embeddedSchedules[labCode][dayKey];
+    }
+
+    function getCurrentDesks() {
+      const baseDesks = labData[currentLab].desks;
+      const selectedDate = getSelectedDate();
+      const lessonInfo = selectedDate ? getLessonInfoForDate(currentLab, selectedDate) : [];
+
+      return baseDesks.map(desk => {
+        if (lessonInfo.length && desk.status === "available") {
+          return { ...desk, status: "blocked", slots: [] };
+        }
+        return { ...desk };
+      });
+    }
+
+    function renderScheduleBanner() {
+      const selectedDate = getSelectedDate();
+
+      if (!selectedDate) {
+        scheduleBanner.innerHTML = '<div class="schedule-banner blocked">Lütfen önce tarih seçin.</div>';
+        return;
+      }
+
+      const lessons = getLessonInfoForDate(currentLab, selectedDate);
+
+      if (!lessons.length) {
+        scheduleBanner.innerHTML = `
+          <div class="schedule-banner available">
+            Bu tarihte ${currentLab} laboratuvarında tanımlı ders görünmüyor. Rezervasyon yapılabilir.
+          </div>
+        `;
+        return;
+      }
+
+      const lessonText = lessons.map(item => `${item.course} (${item.start} - ${item.end})`).join(", ");
+
+      scheduleBanner.innerHTML = `
+        <div class="schedule-banner blocked">
+          Bu tarihte ${currentLab} laboratuvarında ders var: ${lessonText}. Ders günü rezervasyon kapalıdır.
+        </div>
+      `;
+    }
+
+    function resetSelection() {
+      selectedDeskId = null;
+      selectedSlot = null;
+      deskHint.textContent = "Önce tarih seçin, sonra yerleşim planından müsait bir masaya tıklayın.";
+      selectedDeskBadge.innerHTML = "";
+      deskStatusBox.className = "status-box status-pending";
+      deskStatusBox.textContent = "Bir masa seçildiğinde durumu burada gösterilir.";
+      slotList.innerHTML = '<button class="slot-btn" disabled>Masa seçilmedi</button>';
+      summaryDesk.textContent = "-";
+      summaryTime.textContent = "-";
+      reserveBtn.disabled = true;
+    }
+
+    function renderStats() {
+      const desks = getCurrentDesks();
+      totalCount.textContent = desks.length;
+      availableCount.textContent = desks.filter(d => d.status === "available").length;
+      occupiedCount.textContent = desks.filter(d => d.status === "occupied").length;
+      maintenanceCount.textContent = desks.filter(d => d.status === "maintenance").length;
+      summaryLab.textContent = currentLab;
+    }
+
+    function createDeskHTML(desk, orientation = "horizontal") {
+      const disabled = desk.status !== "available";
+      const selectedClass = selectedDeskId === desk.id ? "selected" : desk.status;
+
+      return `
+        <button
+          class="desk ${orientation} ${selectedClass} ${disabled ? "disabled" : ""}"
+          type="button"
+          data-id="${desk.id}"
+          ${disabled ? "disabled" : ""}
+          title="${desk.id} - ${desk.pcs.join(" / ")}"
+        >
+          <span class="desk-tag">${desk.id}</span>
+          <span class="desk-state">${statusText[desk.status]}</span>
+          <span class="pc"></span>
+          <span class="pc"></span>
+        </button>
+      `;
+    }
+
+    function render204() {
+      const desks = getCurrentDesks();
+      deskArea.innerHTML = `
+        <div class="desk-grid-204">
+          ${desks.map(desk => `<div class="desk-row">${createDeskHTML(desk, "horizontal")}</div>`).join("")}
+        </div>
+      `;
+    }
+
+    function render208() {
+      const desks = getCurrentDesks();
+      const topDesk = desks[0];
+      const columnDesks = desks.slice(1);
+
+      deskArea.innerHTML = `
+        <div class="desk-grid-208">
+          <div class="top-row">
+            ${createDeskHTML(topDesk, "horizontal")}
+          </div>
+          <div class="left-column">
+            ${columnDesks.map(desk => createDeskHTML(desk, "vertical")).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function attachDeskEvents() {
+      const deskButtons = document.querySelectorAll(".desk[data-id]");
+      deskButtons.forEach(btn => {
+        if (!btn.disabled) {
+          btn.addEventListener("click", () => selectDesk(btn.dataset.id));
+        }
+      });
+    }
+
+    function renderLab() {
+      const lab = labData[currentLab];
+      pageTitle.textContent = `${lab.name} Yerleşim ve Rezervasyon`;
+      labLabel.textContent = lab.name;
+
+      btn204.classList.toggle("secondary", currentLab !== "204");
+      btn208.classList.toggle("secondary", currentLab !== "208");
+
+      renderScheduleBanner();
+
+      if (lab.layout === "grid204") {
+        render204();
+      } else {
+        render208();
+      }
+
+      attachDeskEvents();
+      renderStats();
+    }
+
+    function selectDesk(deskId) {
+      selectedDeskId = deskId;
+      selectedSlot = null;
+
+      const desk = getCurrentDesks().find(d => d.id === deskId);
+      if (!desk) return;
+
+      deskHint.textContent = `${desk.id} seçildi. ${desk.pcs.join(" / ")} bilgisayarlarını içerir.`;
+      selectedDeskBadge.innerHTML = `<div class="selected-desk">${desk.id} • ${desk.pcs.join(" / ")}</div>`;
+
+      if (desk.status === "available") {
+        deskStatusBox.className = "status-box status-success";
+        deskStatusBox.textContent = `${desk.id} şu anda müsait durumda.`;
+      } else if (desk.status === "occupied") {
+        deskStatusBox.className = "status-box status-error";
+        deskStatusBox.textContent = `${desk.id} şu anda dolu.`;
+      } else {
+        deskStatusBox.className = "status-box status-pending";
+        deskStatusBox.textContent = `${desk.id} şu anda rezervasyona kapalı.`;
+      }
+
+      summaryDesk.textContent = desk.id;
+      summaryTime.textContent = "-";
+      reserveBtn.disabled = true;
+
+      renderLab();
+      renderSlots(desk);
+    }
+
+    function renderSlots(desk) {
+      slotList.innerHTML = "";
+
+      if (!desk.slots.length) {
+        slotList.innerHTML = '<button class="slot-btn" disabled>Uygun saat bulunamadı</button>';
+        return;
+      }
+
+      desk.slots.forEach(slot => {
+        const btn = document.createElement("button");
+        btn.className = "slot-btn";
+        btn.type = "button";
+        btn.textContent = slot;
+
+        if (selectedSlot === slot) {
+          btn.classList.add("selected");
+        }
+
+        btn.addEventListener("click", () => {
+          selectedSlot = slot;
+          summaryTime.textContent = slot;
+          reserveBtn.disabled = false;
+          renderSlots(desk);
+        });
+
+        slotList.appendChild(btn);
+      });
+    }
+
+    function switchLab(labCode) {
+      currentLab = labCode;
+      resetSelection();
+      renderLab();
+    }
+
+    function saveReservation() {
+      const reservation = {
+        studentName: studentName.value.trim(),
+        studentNumber: studentNumber.value.trim(),
+        lab: currentLab,
+        desk: selectedDeskId,
+        date: summaryDate.textContent,
+        slot: selectedSlot,
+        status: "pending",
+        createdAt: new Date().toISOString()
+      };
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(reservation));
+    }
+
+    btn204.addEventListener("click", () => switchLab("204"));
+    btn208.addEventListener("click", () => switchLab("208"));
+
+    reservationDate.addEventListener("change", () => {
+      const selectedDate = getSelectedDate();
+      summaryDate.textContent = selectedDate ? formatDateTR(selectedDate) : "-";
+      resetSelection();
+      renderLab();
+    });
+
+    reserveBtn.addEventListener("click", () => {
+      if (!studentName.value.trim() || !studentNumber.value.trim()) {
+        alert("Lütfen ad soyad ve öğrenci numarası girin.");
+        return;
+      }
+
+      if (!selectedDeskId || !selectedSlot) return;
+
+      saveReservation();
+
+      alert(
+        `${currentLab} numaralı laboratuvarda ${selectedDeskId} için ${summaryDate.textContent} tarihinde ${selectedSlot} aralığında rezervasyon oluşturuldu.\n\n` +
+        `İlgili lab girişindeki QR kodu rezervasyon başlangıcından itibaren ilk 15 dakika içinde scanner ekranından okutulmalıdır.`
+      );
+    });
+
+    setToday();
+    resetSelection();
+    renderLab();
+  </script>
+</body>
+</html>

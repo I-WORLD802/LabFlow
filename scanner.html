@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LabFlow | QR ile Giriş</title>
+  <script src="https://unpkg.com/html5-qrcode" defer></script>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --panel: #ffffff;
+      --text: #12213a;
+      --muted: #6c7890;
+      --border: #d7deea;
+      --primary: #2f61ff;
+      --primary-soft: #eaf0ff;
+      --success-bg: #eefaf0;
+      --success-text: #2f6a36;
+      --danger-bg: #fff1f1;
+      --danger-text: #983838;
+      --warn-bg: #fff8e7;
+      --warn-text: #7f6311;
+      --shadow: 0 14px 36px rgba(13, 35, 87, 0.08);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #eef3fb 0%, #f8fbff 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px;
+      display: grid;
+      gap: 22px;
+    }
+
+    .hero,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 24px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 32px;
+      letter-spacing: -0.03em;
+    }
+
+    .hero p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(420px, 1fr) 360px;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .scanner-panel {
+      padding: 22px;
+    }
+
+    .scanner-header {
+      margin-bottom: 16px;
+    }
+
+    .scanner-header h2 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+    }
+
+    .scanner-header p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    #reader {
+      width: 100%;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      min-height: 340px;
+      background: #f8faff;
+    }
+
+    .side-panel {
+      padding: 22px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .info-card {
+      background: #f8faff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .info-card h3 {
+      margin: 0 0 12px;
+      font-size: 16px;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 10px 0;
+      font-size: 14px;
+    }
+
+    .meta-row strong {
+      font-size: 14px;
+    }
+
+    .status-box {
+      padding: 14px 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    .status-pending {
+      background: var(--warn-bg);
+      color: var(--warn-text);
+    }
+
+    .status-success {
+      background: var(--success-bg);
+      color: var(--success-text);
+    }
+
+    .status-error {
+      background: var(--danger-bg);
+      color: var(--danger-text);
+    }
+
+    .btn {
+      width: 100%;
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(135deg, #2f61ff, #4e86ff);
+      cursor: pointer;
+      box-shadow: 0 14px 28px rgba(47, 97, 255, 0.22);
+    }
+
+    .btn.secondary {
+      background: #1d2a44;
+      box-shadow: none;
+    }
+
+    .btn:disabled {
+      background: #b8c2d6;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .button-group {
+      display: grid;
+      gap: 10px;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    .scan-result {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 14px;
+      background: #f8faff;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+      word-break: break-word;
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .page {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <h1>QR ile Giriş</h1>
+      <p>
+        Rezervasyon başlangıç saatinden sonraki ilk 15 dakika içinde,
+        lab girişindeki yenilenen QR kodu bu ekran üzerinden okutulmalıdır.
+      </p>
+    </section>
+
+    <section class="layout">
+      <div class="panel scanner-panel">
+        <div class="scanner-header">
+          <h2>Kamera ile QR Tara</h2>
+          <p>
+            Kameraya izin verin ve lab giriş ekranındaki canlı QR’ı okutun.
+          </p>
+        </div>
+
+        <div id="reader"></div>
+
+        <div id="scanResult" class="scan-result">
+          Henüz QR kod okunmadı.
+        </div>
+      </div>
+
+      <aside class="panel side-panel">
+        <div class="info-card">
+          <h3>Rezervasyon Bilgisi</h3>
+          <div class="meta-row"><span>Öğrenci</span><strong id="studentName">-</strong></div>
+          <div class="meta-row"><span>Öğrenci No</span><strong id="studentNumber">-</strong></div>
+          <div class="meta-row"><span>Lab</span><strong id="reservationLab">-</strong></div>
+          <div class="meta-row"><span>Masa</span><strong id="reservationDesk">-</strong></div>
+          <div class="meta-row"><span>Tarih</span><strong id="reservationDate">-</strong></div>
+          <div class="meta-row"><span>Saat</span><strong id="reservationSlot">-</strong></div>
+        </div>
+
+        <div class="info-card">
+          <h3>Check-in Durumu</h3>
+          <div class="meta-row"><span>Başlangıç</span><strong id="startTime">-</strong></div>
+          <div class="meta-row"><span>Son Geçerli Saat</span><strong id="deadlineTime">-</strong></div>
+          <div class="meta-row"><span>Rezervasyon Durumu</span><strong id="reservationStatus">-</strong></div>
+          <div id="statusBox" class="status-box status-pending">
+            Kamera başlatılıyor...
+          </div>
+          <div class="note">
+            QR kod doğru lab’a ait olmalı ve check-in ilk 15 dakika içinde yapılmalıdır.
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="button-group">
+            <button id="restartBtn" class="btn">Kamerayı Yeniden Başlat</button>
+            <button id="backBtn" class="btn secondary">Rezervasyon Sayfasına Dön</button>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "labflowReservation";
+
+    let scannerInstance = null;
+    let scanLocked = false;
+
+    const studentNameEl = document.getElementById("studentName");
+    const studentNumberEl = document.getElementById("studentNumber");
+    const reservationLabEl = document.getElementById("reservationLab");
+    const reservationDeskEl = document.getElementById("reservationDesk");
+    const reservationDateEl = document.getElementById("reservationDate");
+    const reservationSlotEl = document.getElementById("reservationSlot");
+    const startTimeEl = document.getElementById("startTime");
+    const deadlineTimeEl = document.getElementById("deadlineTime");
+    const reservationStatusEl = document.getElementById("reservationStatus");
+    const statusBox = document.getElementById("statusBox");
+    const restartBtn = document.getElementById("restartBtn");
+    const backBtn = document.getElementById("backBtn");
+    const scanResult = document.getElementById("scanResult");
+
+    function getReservation() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }
+
+    function saveReservation(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function parseReservationStart(dateStr, slot) {
+      const [dd, mm, yyyy] = dateStr.split(".");
+      const startTime = slot.split(" - ")[0];
+      const [hour, minute] = startTime.split(":");
+      return new Date(Number(yyyy), Number(mm) - 1, Number(dd), Number(hour), Number(minute), 0);
+    }
+
+    function formatTime(date) {
+      const hh = String(date.getHours()).padStart(2, "0");
+      const mm = String(date.getMinutes()).padStart(2, "0");
+      return `${hh}:${mm}`;
+    }
+
+    function setStatus(type, text) {
+      statusBox.className = "status-box";
+      if (type === "success") {
+        statusBox.classList.add("status-success");
+      } else if (type === "error") {
+        statusBox.classList.add("status-error");
+      } else {
+        statusBox.classList.add("status-pending");
+      }
+      statusBox.textContent = text;
+    }
+
+    function fillReservationInfo() {
+      const reservation = getReservation();
+
+      if (!reservation) {
+        studentNameEl.textContent = "-";
+        studentNumberEl.textContent = "-";
+        reservationLabEl.textContent = "-";
+        reservationDeskEl.textContent = "-";
+        reservationDateEl.textContent = "-";
+        reservationSlotEl.textContent = "-";
+        startTimeEl.textContent = "-";
+        deadlineTimeEl.textContent = "-";
+        reservationStatusEl.textContent = "Yok";
+        setStatus("error", "Sistemde aktif rezervasyon bulunamadı.");
+        return null;
+      }
+
+      studentNameEl.textContent = reservation.studentName || "-";
+      studentNumberEl.textContent = reservation.studentNumber || "-";
+      reservationLabEl.textContent = reservation.lab || "-";
+      reservationDeskEl.textContent = reservation.desk || "-";
+      reservationDateEl.textContent = reservation.date || "-";
+      reservationSlotEl.textContent = reservation.slot || "-";
+      reservationStatusEl.textContent = reservation.status || "pending";
+
+      const startDate = parseReservationStart(reservation.date, reservation.slot);
+      const deadlineDate = new Date(startDate.getTime() + 15 * 60 * 1000);
+
+      startTimeEl.textContent = formatTime(startDate);
+      deadlineTimeEl.textContent = formatTime(deadlineDate);
+
+      if (reservation.status === "active") {
+        setStatus("success", "Bu rezervasyon zaten aktif durumda.");
+      } else {
+        setStatus("pending", "Lab girişindeki QR kod bekleniyor.");
+      }
+
+      return reservation;
+    }
+
+    function extractLabFromQr(decodedText) {
+      try {
+        if (decodedText.includes("http://") || decodedText.includes("https://")) {
+          const url = new URL(decodedText);
+          return url.searchParams.get("lab");
+        }
+
+        const params = new URLSearchParams(decodedText);
+        return params.get("lab");
+      } catch (error) {
+        try {
+          const params = new URLSearchParams(decodedText);
+          return params.get("lab");
+        } catch {
+          return null;
+        }
+      }
+    }
+
+    function validateCheckin(decodedText) {
+      const reservation = getReservation();
+
+      if (!reservation) {
+        setStatus("error", "Aktif rezervasyon bulunamadı.");
+        return false;
+      }
+
+      if (reservation.status === "active") {
+        setStatus("success", "Rezervasyon zaten aktif.");
+        return true;
+      }
+
+      const qrLab = extractLabFromQr(decodedText);
+      if (!qrLab) {
+        setStatus("error", "QR kod içeriğinde lab bilgisi okunamadı.");
+        return false;
+      }
+
+      if (String(qrLab) !== String(reservation.lab)) {
+        setStatus("error", `Yanlış lab QR'ı okutuldu. Beklenen lab: ${reservation.lab}`);
+        return false;
+      }
+
+      const now = new Date();
+      const startDate = parseReservationStart(reservation.date, reservation.slot);
+      const deadlineDate = new Date(startDate.getTime() + 15 * 60 * 1000);
+
+      if (now < startDate) {
+        setStatus("error", "Rezervasyon saati henüz başlamadı.");
+        return false;
+      }
+
+      if (now > deadlineDate) {
+        reservation.status = "expired";
+        saveReservation(reservation);
+        reservationStatusEl.textContent = "expired";
+        setStatus("error", "15 dakikalık check-in süresi doldu. Rezervasyon iptal edildi.");
+        return false;
+      }
+
+      reservation.status = "active";
+      reservation.checkedInAt = now.toISOString();
+      reservationStatusEl.textContent = "active";
+      saveReservation(reservation);
+
+      setStatus("success", `Check-in başarılı. ${reservation.lab} labına giriş doğrulandı.`);
+      return true;
+    }
+
+    async function stopScanner() {
+      if (scannerInstance) {
+        try {
+          await scannerInstance.stop();
+        } catch (e) {}
+        try {
+          await scannerInstance.clear();
+        } catch (e) {}
+        scannerInstance = null;
+      }
+    }
+
+    async function startScanner() {
+      scanLocked = false;
+      await stopScanner();
+
+      const reservation = fillReservationInfo();
+      if (!reservation) return;
+
+      if (reservation.status === "active") {
+        return;
+      }
+
+      if (typeof Html5Qrcode === "undefined") {
+        setStatus("error", "QR kütüphanesi yüklenemedi. İnternet bağlantısını kontrol edin.");
+        return;
+      }
+
+      scannerInstance = new Html5Qrcode("reader");
+
+      try {
+        await scannerInstance.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 }
+          },
+          async (decodedText) => {
+            if (scanLocked) return;
+            scanLocked = true;
+
+            scanResult.textContent = `Okunan QR verisi: ${decodedText}`;
+
+            const ok = validateCheckin(decodedText);
+
+            if (ok) {
+              await stopScanner();
+            } else {
+              setTimeout(() => {
+                scanLocked = false;
+              }, 1500);
+            }
+          },
+          () => {}
+        );
+
+        setStatus("pending", "Kamera hazır. Lab girişindeki QR kodu okutabilirsiniz.");
+      } catch (error) {
+        console.error(error);
+        setStatus("error", "Kamera başlatılamadı. Tarayıcı izinlerini kontrol edin.");
+      }
+    }
+
+    restartBtn.addEventListener("click", startScanner);
+
+    backBtn.addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
+
+    window.addEventListener("load", startScanner);
+  </script>
+</body>
+</html>
